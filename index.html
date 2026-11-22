@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学生成绩管理程序（网页版）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='3' width='16' height='18' rx='2' fill='%2324608a'/%3E%3Cpath d='M8 8h8M8 12h8M8 16h5' stroke='white' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --ink: #1c2733;
+    --muted: #5f6f7d;
+    --line: #e2e8ee;
+    --primary: #24608a;
+    --primary-dark: #1b4c6e;
+    --ok: #2e8b57;
+    --ok-bg: #e8f4ec;
+    --bad: #c0392b;
+    --bad-bg: #fbecea;
+    --gold-bg: #fbf3dd;
+    --gold-ink: #8a6d1a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 28px 20px 48px; }
+
+  header.page-head { margin-bottom: 24px; }
+  .badge {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--primary);
+    background: #eaf2f7;
+    border: 1px solid #d5e5ee;
+    border-radius: 999px;
+    padding: 3px 12px;
+    margin-bottom: 10px;
+  }
+  header.page-head h1 { font-size: 28px; margin: 0 0 6px; }
+  header.page-head h1 span { color: var(--primary); }
+  header.page-head .meta { color: var(--muted); font-size: 14px; margin: 0; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(28, 39, 51, 0.06);
+  }
+  .card h2 { font-size: 18px; margin: 0 0 16px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .card-head h2 { margin: 0; }
+
+  .form-row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-end; }
+  .form-row label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+  input[type="number"], input.name-input {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+    background: #fff;
+    min-width: 140px;
+  }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(36, 96, 138, 0.15); }
+  .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  button.primary { background: var(--primary); color: #fff; }
+  button.primary:hover { background: var(--primary-dark); }
+  button.ghost { background: #fff; color: var(--primary); border-color: var(--line); }
+  button.ghost:hover { border-color: var(--primary); }
+  button.small { padding: 6px 12px; font-size: 13px; }
+  button.link-btn { background: none; border: none; color: var(--bad); padding: 6px 8px; }
+  button.link-btn:hover { text-decoration: underline; }
+
+  .hint { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
+  .field-error { display: block; font-size: 12px; color: var(--bad); min-height: 16px; margin-top: 2px; }
+  .entry-error { color: var(--bad); font-size: 14px; margin-top: 10px; }
+
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .entry-table th, .rank-table th {
+    text-align: left;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .entry-table td, .rank-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .entry-table input.name-input { width: 100%; min-width: 0; }
+  .entry-table .score-input {
+    width: 100%; min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 15px;
+    font-family: inherit;
+  }
+  .entry-table .idx { color: var(--muted); }
+
+  .empty { color: var(--muted); font-size: 14px; padding: 24px 0; text-align: center; border: 1px dashed var(--line); border-radius: 10px; }
+
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 18px; }
+  .stat-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .stat-card .label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .stat-card .value { font-size: 22px; font-weight: 700; }
+  .stat-card .sub { font-size: 13px; color: var(--muted); }
+
+  .pass-rate { margin: 6px 0 22px; }
+  .pass-rate .rate-head { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+  .pass-rate .bar { height: 12px; border-radius: 999px; background: #eef2f5; overflow: hidden; }
+  .pass-rate .bar > i { display: block; height: 100%; border-radius: 999px; background: var(--ok); }
+
+  .rank-table th:nth-child(1), .rank-table td:nth-child(1) { width: 12%; }
+  .rank-table th:nth-child(3), .rank-table td:nth-child(3) { width: 22%; }
+  .rank-table th:nth-child(4), .rank-table td:nth-child(4) { width: 22%; }
+  .rank-table tr.top-row { background: var(--gold-bg); }
+  .rank-table tr.top-row td:first-child { color: var(--gold-ink); font-weight: 700; }
+  .tag { display: inline-block; font-size: 12px; border-radius: 999px; padding: 3px 10px; }
+  .tag.ok { color: var(--ok); background: var(--ok-bg); }
+  .tag.bad { color: var(--bad); background: var(--bad-bg); }
+  .score-bad { color: var(--bad); font-weight: 700; }
+
+  #changelog ul { margin: 0; padding-left: 20px; }
+  #changelog li { margin-bottom: 8px; font-size: 14px; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 28px; }
+
+  @media (max-width: 760px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .form-row { flex-direction: column; align-items: stretch; }
+    .form-row label input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="badge">面向对象编程 2 · 第 2 周作业 · Vibe 编码</div>
+    <h1>学生成绩管理程序 <span>网页版</span></h1>
+    <p class="meta">学号 23102734 · 姓名 张睿 · 由第 1 周 C++ 控制台程序迁移至浏览器中运行</p>
+  </header>
+
+  <!-- ===== 视图 1：基本设置 ===== -->
+  <section class="card">
+    <h2>1. 基本设置</h2>
+    <div class="form-row">
+      <label>学生人数
+        <input type="number" id="count" min="1" max="100" value="5">
+      </label>
+      <label>及格线（默认 60，留空按 60 处理）
+        <input type="number" id="passLine" min="0" max="100" value="60">
+      </label>
+      <div class="btn-group">
+        <button class="primary" id="btnBuild">生成录入表</button>
+        <button class="ghost" id="btnSample">填充示例数据</button>
+        <button class="ghost" id="btnReset">重置</button>
+      </div>
+    </div>
+    <p class="hint">对应 C++ 流程：先输入学生人数与及格分数线，再逐名录入学生姓名与成绩。</p>
+  </section>
+
+  <!-- ===== 视图 2：信息录入 ===== -->
+  <section class="card">
+    <div class="card-head">
+      <h2>2. 学生信息录入</h2>
+      <button class="ghost small" id="btnAdd">追加一名学生</button>
+    </div>
+    <table class="entry-table">
+      <colgroup>
+        <col style="width:10%">
+        <col style="width:45%">
+        <col style="width:30%">
+        <col style="width:15%">
+      </colgroup>
+      <thead>
+        <tr><th>序号</th><th>姓名</th><th>成绩（0~100）</th><th>操作</th></tr>
+      </thead>
+      <tbody id="entryBody"></tbody>
+    </table>
+    <p class="entry-error" id="entryError" hidden></p>
+  </section>
+
+  <!-- ===== 视图 3：统计报告 ===== -->
+  <section class="card">
+    <div class="card-head">
+      <h2>3. 成绩统计报告</h2>
+      <button class="primary" id="btnReport">生成成绩报告</button>
+    </div>
+    <div class="empty" id="reportEmpty">录入学生信息后，点击「生成成绩报告」查看统计结果与成绩排名。</div>
+    <div id="reportContent" hidden>
+      <div class="stats">
+        <div class="stat-card">
+          <div class="label">学生人数</div>
+          <div class="value" id="stCount">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">平均分</div>
+          <div class="value" id="stAvg">—</div>
+          <div class="sub">分</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">最高分</div>
+          <div class="value" id="stTop">—</div>
+          <div class="sub" id="stTopName"></div>
+        </div>
+        <div class="stat-card">
+          <div class="label">及格人数</div>
+          <div class="value" id="stPass">—</div>
+          <div class="sub" id="stPassLine"></div>
+        </div>
+        <div class="stat-card">
+          <div class="label">不及格人数</div>
+          <div class="value" id="stFail">—</div>
+        </div>
+      </div>
+
+      <div class="pass-rate">
+        <div class="rate-head">
+          <span>及格率</span>
+          <span id="rateText">—</span>
+        </div>
+        <div class="bar"><i id="rateBar" style="width:0%"></i></div>
+      </div>
+
+      <h3 style="font-size:16px;margin:8px 0 12px;">成绩排名（从高到低）</h3>
+      <table class="rank-table">
+        <colgroup>
+          <col style="width:12%">
+          <col style="width:44%">
+          <col style="width:22%">
+          <col style="width:22%">
+        </colgroup>
+        <thead><tr><th>名次</th><th>姓名</th><th>成绩</th><th>状态</th></tr></thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 附：AI 改进说明 ===== -->
+  <section class="card" id="changelog">
+    <h2>附：由 AI 实现 / 改进的内容</h2>
+    <ul>
+      <li>将原 C++ 控制台的顺序问答流程重构为分区可视化界面：基本设置、信息录入、统计报告三个区域分步呈现。</li>
+      <li>支持动态增删学生：在初始人数之外可随时追加或删除学生行，名单随操作实时调整（对应 C++ 中 vector 的动态扩容）。</li>
+      <li>即时输入校验：姓名不能为空，成绩必须为 0~100 的整数；非法输入在行内红字提示，生成报告前统一拦截。</li>
+      <li>结果可视化：统计数据以卡片展示，新增及格率进度条；排名表对第一名高亮标注，不及格成绩以红色标识。</li>
+      <li>提供示例数据一键填充与一键重置，便于功能测试与课堂演示。</li>
+    </ul>
+  </section>
+
+  <footer>移植自 C++ 控制台程序 main.cpp · 原生 HTML / CSS / JavaScript 单文件，可直接在浏览器中打开运行</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var entryBody = $("entryBody");
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function scoreMessage(raw) {
+    if (raw === "") return "成绩不能为空";
+    if (!/^\d+$/.test(raw)) return "成绩须为 0~100 的整数";
+    var n = Number(raw);
+    if (n < 0 || n > 100) return "成绩须在 0~100 之间";
+    return "";
+  }
+
+  function addRow(name, score) {
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td class="idx"></td>' +
+      '<td><input class="name-input" type="text" placeholder="请输入姓名" value="' + escapeHtml(name || "") + '"></td>' +
+      '<td><input class="score-input" type="text" inputmode="numeric" placeholder="0~100" value="' + escapeHtml(score === undefined ? "" : score) + '">' +
+      '<span class="field-error"></span></td>' +
+      '<td><button class="link-btn" type="button">删除</button></td>';
+    entryBody.appendChild(tr);
+    refreshIndexes();
+  }
+
+  function refreshIndexes() {
+    var rows = entryBody.querySelectorAll("tr");
+    rows.forEach(function (tr, i) {
+      tr.querySelector(".idx").textContent = i + 1;
+    });
+  }
+
+  function buildTable(count) {
+    entryBody.innerHTML = "";
+    for (var i = 0; i < count; i++) addRow("", "");
+    hideEntryError();
+  }
+
+  function showEntryError(msg) {
+    var p = $("entryError");
+    p.textContent = msg;
+    p.hidden = false;
+  }
+  function hideEntryError() {
+    $("entryError").hidden = true;
+    $("entryError").textContent = "";
+  }
+
+  function collectRows() {
+    var rows = Array.prototype.slice.call(entryBody.querySelectorAll("tr"));
+    var students = [];
+    var errors = [];
+    rows.forEach(function (tr, i) {
+      var name = tr.querySelector(".name-input").value.trim();
+      var scoreRaw = tr.querySelector(".score-input").value.trim();
+      var errBox = tr.querySelector(".field-error");
+      var err = "";
+      if (!name) err = "姓名不能为空";
+      else err = scoreMessage(scoreRaw);
+      errBox.textContent = err;
+      if (err) errors.push("第 " + (i + 1) + " 名学生：" + err);
+      if (!err) students.push({ name: name, score: Number(scoreRaw) });
+    });
+    return { students: students, errors: errors };
+  }
+
+  function renderReport(students, passLine) {
+    var count = students.length;
+    var sum = students.reduce(function (a, s) { return a + s.score; }, 0);
+    var avg = sum / count;
+
+    var top = students[0];
+    students.forEach(function (s) { if (s.score > top.score) top = s; });
+
+    var passed = students.filter(function (s) { return s.score >= passLine; }).length;
+    var failed = count - passed;
+    var rate = count > 0 ? (passed / count) * 100 : 0;
+
+    $("stCount").textContent = count + " 人";
+    $("stAvg").textContent = avg.toFixed(2);
+    $("stTop").textContent = top.score + " 分";
+    $("stTopName").textContent = top.name;
+    $("stPass").textContent = passed + " 人";
+    $("stPassLine").textContent = "及格线 " + passLine + " 分";
+    $("stFail").textContent = failed + " 人";
+    $("rateText").textContent = passed + " / " + count + " 人（" + rate.toFixed(1) + "%）";
+    $("rateBar").style.width = rate.toFixed(1) + "%";
+
+    var sorted = students.slice().sort(function (a, b) { return b.score - a.score; });
+    var rankBody = $("rankBody");
+    rankBody.innerHTML = "";
+    sorted.forEach(function (s, i) {
+      var tr = document.createElement("tr");
+      if (i === 0) tr.className = "top-row";
+      var ok = s.score >= passLine;
+      var scoreCls = ok ? "" : "score-bad";
+      var tag = ok ? '<span class="tag ok">及格</span>' : '<span class="tag bad">不及格</span>';
+      tr.innerHTML =
+        "<td>" + (i + 1) + "</td>" +
+        "<td>" + escapeHtml(s.name) + "</td>" +
+        '<td class="' + scoreCls + '">' + s.score + " 分</td>" +
+        "<td>" + tag + "</td>";
+      rankBody.appendChild(tr);
+    });
+
+    $("reportEmpty").hidden = true;
+    $("reportContent").hidden = false;
+  }
+
+  function generateReport() {
+    var passRaw = $("passLine").value.trim();
+    var passLine = 60;
+    if (passRaw !== "") {
+      if (!/^\d+$/.test(passRaw) || Number(passRaw) < 0 || Number(passRaw) > 100) {
+        showEntryError("及格线须为 0~100 的整数；留空则按默认 60 分处理。");
+        return;
+      }
+      passLine = Number(passRaw);
+    }
+
+    var result = collectRows();
+    if (result.students.length === 0 && result.errors.length === 0) {
+      showEntryError("请先录入至少一名学生。");
+      return;
+    }
+    if (result.errors.length > 0) {
+      showEntryError("存在 " + result.errors.length + " 处输入错误，请先修正后再生成报告。");
+      return;
+    }
+    hideEntryError();
+    renderReport(result.students, passLine);
+  }
+
+  // 事件绑定
+  $("btnBuild").addEventListener("click", function () {
+    var n = Number($("count").value);
+    if (!Number.isInteger(n) || n < 1 || n > 100) {
+      showEntryError("学生人数须为 1~100 之间的整数。");
+      return;
+    }
+    buildTable(n);
+  });
+
+  $("btnAdd").addEventListener("click", function () {
+    addRow("", "");
+    hideEntryError();
+  });
+
+  $("btnSample").addEventListener("click", function () {
+    var sample = [["张睿", 92], ["赵强", 88], ["李明", 78], ["陈静", 63], ["王芳", 55]];
+    entryBody.innerHTML = "";
+    sample.forEach(function (item) { addRow(item[0], item[1]); });
+    $("count").value = sample.length;
+    $("passLine").value = 60;
+    hideEntryError();
+  });
+
+  $("btnReset").addEventListener("click", function () {
+    entryBody.innerHTML = "";
+    $("count").value = 5;
+    $("passLine").value = 60;
+    $("reportEmpty").hidden = false;
+    $("reportContent").hidden = true;
+    hideEntryError();
+    buildTable(5);
+  });
+
+  $("btnReport").addEventListener("click", generateReport);
+
+  // 行内事件委托：成绩即时校验、删除行
+  entryBody.addEventListener("input", function (e) {
+    if (e.target.classList.contains("score-input")) {
+      var errBox = e.target.closest("tr").querySelector(".field-error");
+      errBox.textContent = scoreMessage(e.target.value.trim());
+    }
+  });
+  entryBody.addEventListener("click", function (e) {
+    if (e.target.classList.contains("link-btn")) {
+      e.target.closest("tr").remove();
+      refreshIndexes();
+    }
+  });
+
+  // 初始生成 5 行空录入表（对应 C++ 默认演示人数）
+  buildTable(5);
+})();
+</script>
+</body>
+</html>
